@@ -7,7 +7,8 @@ var messageForm = document.querySelector('#messageForm');
 var messageInput = document.querySelector('#message');
 var messageArea = document.querySelector('#messageArea');
 var connectingElement = document.querySelector('.connecting');
-
+var chatRooms = {}; // Object to store chat rooms
+var selectedChat = 'public'; // Default selected chat room
 var stompClient = null;
 var username = null;
 
@@ -18,8 +19,15 @@ var colors = [
 
 function connect(event) {
     username = document.querySelector('#name').value.trim();
+    var chatRoomName = document.querySelector('#chatRoomName').value.trim();
 
-    if(username) {
+    if (username && chatRoomName) {
+        if (!chatRooms[chatRoomName]) {
+            chatRooms[chatRoomName] = { messages: [] };
+        }
+
+        selectedChat = chatRoomName;
+
         usernamePage.classList.add('hidden');
         chatPage.classList.remove('hidden');
 
@@ -33,15 +41,11 @@ function connect(event) {
 
 
 function onConnected() {
-    // Subscribe to the Public Topic
-    stompClient.subscribe('/topic/public', onMessageReceived);
-
-    // Tell your username to the server
-    stompClient.send("/app/chat.addUser",
+    stompClient.subscribe('/topic/' + selectedChat, onMessageReceived);
+    stompClient.send('/app/chat.addUser/' + selectedChat,
         {},
         JSON.stringify({sender: username, type: 'JOIN'})
     )
-
     connectingElement.classList.add('hidden');
 }
 
@@ -54,13 +58,13 @@ function onError(error) {
 
 function sendMessage(event) {
     var messageContent = messageInput.value.trim();
-    if(messageContent && stompClient) {
+    if (messageContent && stompClient) {
         var chatMessage = {
             sender: username,
             content: messageInput.value,
             type: 'CHAT'
         };
-        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+        stompClient.send('/app/chat.sendMessage/' + selectedChat, {}, JSON.stringify(chatMessage));
         messageInput.value = '';
     }
     event.preventDefault();
@@ -72,7 +76,7 @@ function onMessageReceived(payload) {
 
     var messageElement = document.createElement('li');
 
-    if(message.type === 'JOIN') {
+    if (message.type === 'JOIN') {
         messageElement.classList.add('event-message');
         message.content = message.sender + ' joined!';
     } else if (message.type === 'LEAVE') {
