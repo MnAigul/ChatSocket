@@ -197,7 +197,17 @@ button.accent {
     font-style: normal;
     text-transform: uppercase;
 }
-
+#chat-page .chat-message d {
+    content: '';
+    display: block;
+    position: absolute;
+    right: 0px;
+    top: 50%;
+    transform: translate(-90%,-40%);
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
 #chat-page .chat-message span {
     color: #333;
     font-weight: 600;
@@ -206,7 +216,6 @@ button.accent {
 #chat-page .chat-message p {
     color: #43464b;
 }
-
 #messageForm .input-group input {
     float: left;
     width: calc(100% - 85px);
