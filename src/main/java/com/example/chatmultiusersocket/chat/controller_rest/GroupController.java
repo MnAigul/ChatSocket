@@ -7,8 +7,5 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/group")
 public class GroupController {
-    @GetMapping
-    public String getGroup() {
-        return "Group";
-    }
+    
 }
