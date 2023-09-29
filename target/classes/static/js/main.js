@@ -7,10 +7,14 @@ var messageForm = document.querySelector('#messageForm');
 var messageInput = document.querySelector('#message');
 var messageArea = document.querySelector('#messageArea');
 var connectingElement = document.querySelector('.connecting');
+const blockClick = document.querySelector('.d');
 var chatRooms = {}; // Object to store chat rooms
 var selectedChat = 'public'; // Default selected chat room
 var stompClient = null;
-var username = null;
+var user = {
+    username: null,
+    status: "ACTIVE"
+}
 
 var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
@@ -18,13 +22,18 @@ var colors = [
 ];
 
 function connect(event) {
-    username = document.querySelector('#name').value.trim();
+    user.username = document.querySelector('#name').value.trim();
     var chatRoomName = document.querySelector('#chatRoomName').value.trim();
 
-    if (username && chatRoomName) {
+    if (user.username && chatRoomName) {
         if (!chatRooms[chatRoomName]) {
-            chatRooms[chatRoomName] = { messages: [] };
+            chatRooms[chatRoomName] =
+                {
+                messages: [],
+                admin: user.username
+            };
         }
+
 
         selectedChat = chatRoomName;
 
@@ -44,7 +53,7 @@ function onConnected() {
     stompClient.subscribe('/topic/' + selectedChat, onMessageReceived);
     stompClient.send('/app/chat.addUser/' + selectedChat,
         {},
-        JSON.stringify({sender: username, type: 'JOIN'})
+        JSON.stringify({sender: user.username, type: 'JOIN'})
     )
     connectingElement.classList.add('hidden');
 }
@@ -60,7 +69,7 @@ function sendMessage(event) {
     var messageContent = messageInput.value.trim();
     if (messageContent && stompClient) {
         var chatMessage = {
-            sender: username,
+            sender: user.username,
             content: messageInput.value,
             type: 'CHAT'
         };
@@ -76,6 +85,7 @@ function onMessageReceived(payload) {
 
     var messageElement = document.createElement('li');
 
+    let userCanMessaging = true;
     if (message.type === 'JOIN') {
         messageElement.classList.add('event-message');
         message.content = message.sender + ' joined!';
@@ -83,29 +93,48 @@ function onMessageReceived(payload) {
         messageElement.classList.add('event-message');
         message.content = message.sender + ' left!';
     } else {
-        messageElement.classList.add('chat-message');
+        if (user.status === "ACTIVE") {
+            messageElement.classList.add('chat-message');
 
-        var avatarElement = document.createElement('i');
-        var avatarText = document.createTextNode(message.sender[0]);
-        avatarElement.appendChild(avatarText);
-        avatarElement.style['background-color'] = getAvatarColor(message.sender);
+            var avatarElement = document.createElement('i');
+            var avatarText = document.createTextNode(message.sender[0]);
+            avatarElement.appendChild(avatarText);
+            avatarElement.style['background-color'] = getAvatarColor(message.sender);
 
-        messageElement.appendChild(avatarElement);
+            messageElement.appendChild(avatarElement);
 
-        var usernameElement = document.createElement('span');
-        var usernameText = document.createTextNode(message.sender);
-        usernameElement.appendChild(usernameText);
-        messageElement.appendChild(usernameElement);
+
+            var usernameElement = document.createElement('span');
+            var usernameText = document.createTextNode(message.sender);
+            usernameElement.appendChild(usernameText);
+            if (user.username === chatRooms[selectedChat].admin) {
+                var blockUser = document.createElement('d');
+                var blockText = document.createTextNode("Block");
+                blockUser.appendChild(blockText);
+                messageElement.appendChild(blockUser);
+
+                blockUser.addEventListener('click', (e) => {
+                    (user.status === "ACTIVE") ? user.status = "BLOCKED" : user.status = "ACTIVE";
+                    (user.status === "ACTIVE") ? blockUser.textContent = 'Block' : blockUser.textContent = 'Unblock';
+                });
+            }
+            messageElement.appendChild(usernameElement);
+        } else {
+            userCanMessaging = false;
+        }
+
     }
 
-    var textElement = document.createElement('p');
-    var messageText = document.createTextNode(message.content);
-    textElement.appendChild(messageText);
+    if (userCanMessaging) {
+        var textElement = document.createElement('p');
+        var messageText = document.createTextNode(message.content);
+        textElement.appendChild(messageText);
 
-    messageElement.appendChild(textElement);
+        messageElement.appendChild(textElement);
 
-    messageArea.appendChild(messageElement);
-    messageArea.scrollTop = messageArea.scrollHeight;
+        messageArea.appendChild(messageElement);
+        messageArea.scrollTop = messageArea.scrollHeight;
+    }
 }
 
 
@@ -117,6 +146,7 @@ function getAvatarColor(messageSender) {
     var index = Math.abs(hash % colors.length);
     return colors[index];
 }
+
 
 usernameForm.addEventListener('submit', connect, true)
 messageForm.addEventListener('submit', sendMessage, true)
