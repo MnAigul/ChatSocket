@@ -29,6 +29,9 @@ public class MessageEntity {
     @Column(name = "message_text", nullable = false)
     private String messageText;
 
+    @Column(name = "type", nullable = false)
+    private String type;
+
     @Column(name = "sent_time", nullable = false)
     private Timestamp sentTime;
 

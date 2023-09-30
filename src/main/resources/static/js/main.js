@@ -53,7 +53,7 @@ function onConnected() {
     stompClient.subscribe('/topic/' + selectedChat, onMessageReceived);
     stompClient.send('/app/chat.addUser/' + selectedChat,
         {},
-        JSON.stringify({sender: user.username, type: 'JOIN'})
+        JSON.stringify({fromUserId: user.username, type: 'JOIN'})
     )
     connectingElement.classList.add('hidden');
 }
