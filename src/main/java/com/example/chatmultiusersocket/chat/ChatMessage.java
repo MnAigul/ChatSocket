@@ -1,7 +1,6 @@
 package com.example.chatmultiusersocket.chat;
 
 import lombok.*;
-import org.springframework.web.util.pattern.PathPattern;
 
 @Getter
 @Setter

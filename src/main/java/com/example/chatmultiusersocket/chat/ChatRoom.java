@@ -14,7 +14,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatRoom {
-    private String name;
     private Map<String, User> users; // Map of username to User object
     private String admin;
     private List<ChatMessage> messages;
@@ -30,5 +29,9 @@ public class ChatRoom {
 
     public void addUser(User user) {
         users.put(user.getUsername(), user);
+    }
+
+    public void addMessage(ChatMessage message) {
+        messages.add(message);
     }
 }
