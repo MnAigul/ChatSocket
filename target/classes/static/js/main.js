@@ -58,14 +58,24 @@ function connect(event) {
 
 
 function onConnected() {  // TODO: add check to one user have one name
-  if (!subscription)
-    subscription =
-        stompClient.subscribe('/topic/' + selectedChat, onMessageReceived);
-  stompClient.send(
-      '/app/chat.addUser/' + selectedChat, {},
-      JSON.stringify({sender: user.username, type: 'JOIN'}))
-  connectingElement.classList.add('hidden');
+  // alert('OK');
+  fetch('/chatrooms/getUsers/' + selectedChat + '/' + user.username)
+      .then(response => response.json())
+      .then(data => {
+        if (data === true) {
+          alert('username exists in chatroom');
+          window.location.reload();
 
+        } else {
+          stompClient.send(
+              '/app/chat.addUser/' + selectedChat, {},
+              JSON.stringify({sender: user.username, type: 'JOIN'}))
+          connectingElement.classList.add('hidden');
+        }
+      })
+  if (!subscription)
+  subscription =
+      stompClient.subscribe('/topic/' + selectedChat, onMessageReceived);
 }
 
 
@@ -84,21 +94,11 @@ function sendMessage(event) {
       content: messageInput.value,
       type: 'CHAT'
     };
-    fetch('/chatrooms/getUserStatus/' + selectedChat + '/' + user.username)
-        .then(response => response.json())
-        .then(data => {
-          user.status = data;
-        })
-        .catch(error => {
-          console.log('Error fetching chat rooms:', error);
-        })
-
-    if (user.status === 'ACTIVE') {
-      stompClient.send(
-          '/app/chat.sendMessage/' + selectedChat, {},
-          JSON.stringify(chatMessage));
-      messageInput.value = '';
-    }
+    stompClient.send(
+        '/app/chat.sendMessage/' + selectedChat, {},
+        JSON.stringify(chatMessage));
+    messageInput.value = '';
+    // }
   }
   event.preventDefault();
 }
@@ -106,22 +106,7 @@ function sendMessage(event) {
 
 function onMessageReceived(payload) {
   var message = JSON.parse(payload.body);
-
-  fetch('/chatrooms/getUserStatus/' + selectedChat + '/' + message.sender)
-        .then(response => response.json())
-        .then(data => {
-          message.status = data;
-        })
-        .catch(error => {
-          console.log(error);
-        })
-
-  if(message.status==='BLOCKED'){
-    return;
-  }
-
   var messageElement = document.createElement('li');
-
   if (message.type === 'JOIN') {
     messageElement.classList.add('event-message');
     message.content = message.sender + ' joined!';
@@ -129,7 +114,25 @@ function onMessageReceived(payload) {
     messageElement.classList.add('event-message');
     message.content = message.sender + ' left!';
   } else {
-    if (user.status === 'ACTIVE' && message.status !== 'BLOCKED') {
+    //our messanges in right side
+    if (message.sender == user.username) {
+      messageElement.classList.add('chat-message');
+      messageElement.style.textAlign = 'right';
+
+      var avatarElement = document.createElement('i');
+      var avatarText = document.createTextNode(message.sender[0]);
+      avatarElement.appendChild(avatarText);
+      avatarElement.style.backgroundColor = getAvatarColor(message.sender);
+  
+      messageElement.appendChild(avatarElement);
+
+      var usernameElement = document.createElement('span');
+      var usernameText = document.createTextNode(message.sender);
+      usernameElement.appendChild(usernameText);
+
+      messageElement.appendChild(usernameElement);
+      //other messanges in left side
+    } else {
       messageElement.classList.add('chat-message');
 
       var avatarElement = document.createElement('i');
@@ -142,33 +145,8 @@ function onMessageReceived(payload) {
       var usernameElement = document.createElement('span');
       var usernameText = document.createTextNode(message.sender);
       usernameElement.appendChild(usernameText);
-      if (user.username === selectedChat) {
-        var blockUser = document.createElement('d');
-        var blockText = document.createTextNode('Block');
-        blockUser.appendChild(blockText);
-        messageElement.appendChild(blockUser);
 
-        blockUser.addEventListener('click', (e) => {
-          if (user.status === 'ACTIVE') {
-            user.status = 'BLOCKED';
-            blockUser.textContent = 'Unblock';
-          } else {
-            user.status = 'ACTIVE';
-            blockUser.textContent = 'Block';
-          }
-          stompClient.send(
-              '/app/chat.updateStatus/' + selectedChat, {}, JSON.stringify({
-                sender: message.sender,
-                status: message.status,
-                type: 'STATUS_UPDATE'
-              }));
-        });
-      }
       messageElement.appendChild(usernameElement);
-    }
-    else {
-      messageElement.classList.add('blocked-message');
-      message.content = 'This user is blocked.';
     }
   }
 
@@ -258,4 +236,3 @@ function clearMessages() {
     messageArea.removeChild(messageArea.firstChild);
   }
 }
-

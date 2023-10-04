@@ -41,23 +41,13 @@ public class ChatController {
         } else {
             if(!chatRooms.get(chatRoom).getUsers().containsKey(username)) {
                  chatRooms.get(chatRoom).addUser(new User(username, "ACTIVE"));
+            } else{
+                return null;
             }
         }
         return chatMessage;
     }
 
-    // NOT WORKING
-    @MessageMapping("/chat.updateStatus/{chatRoom}")
-    @SendTo("/topic/{chatRoom}")
-    public ChatMessage updateStatus(@Payload ChatMessage chatMessage, @DestinationVariable String chatRoom) {
-        String sender = chatMessage.getSender();
-        if (chatRooms.get(chatRoom).getUsers().get(sender).getStatus().equalsIgnoreCase("BLOCKED")) {
-            chatRooms.get(chatRoom).getUsers().get(sender).setStatus("ACTIVE");
-        } else{
-            chatRooms.get(chatRoom).getUsers().get(sender).setStatus("BLOCKED");
-        }
-        return chatMessage;
-    }
 
     @RequestMapping("/chatrooms") // TODO:
     public Set<String> getChatRooms() {
@@ -72,18 +62,12 @@ public class ChatController {
         return Collections.emptyList();
     }
 
-    @PostMapping("/chatrooms/messages/add/{chatRoom}")
-    public ChatMessage addMessageToChatRoom(@PathVariable("chatRoom") String chatRoom,
-            @Payload ChatMessage chatMessage) {
-        chatRooms.get(chatRoom).addMessage(chatMessage);
-        return chatMessage;
+    @RequestMapping("/chatrooms/getUsers/{chatRoom}/{username}")
+    public boolean getUsers(@PathVariable("chatRoom") String chatRoom, @PathVariable("username") String username) {
+        if (!chatRooms.containsKey(chatRoom)) {
+            return false;
+        }
+        return chatRooms.get(chatRoom).getUsers().containsKey(username);
     }
 
-    @RequestMapping("/chatrooms/getUserStatus/{chatRoom}/{username}")
-    public String getUserStatus(@PathVariable("username") String username , @PathVariable("chatRoom") String chatRoom) {
-        if (!chatRooms.containsKey(chatRoom)) {
-            return null;
-        }
-        return chatRooms.get(chatRoom).getUsers().get(username).getStatus();
-    }
 }
