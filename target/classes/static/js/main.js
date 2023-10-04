@@ -65,6 +65,7 @@ function onConnected() {  // TODO: add check to one user have one name
       '/app/chat.addUser/' + selectedChat, {},
       JSON.stringify({sender: user.username, type: 'JOIN'}))
   connectingElement.classList.add('hidden');
+
 }
 
 
@@ -106,6 +107,19 @@ function sendMessage(event) {
 function onMessageReceived(payload) {
   var message = JSON.parse(payload.body);
 
+  fetch('/chatrooms/getUserStatus/' + selectedChat + '/' + message.sender)
+        .then(response => response.json())
+        .then(data => {
+          message.status = data;
+        })
+        .catch(error => {
+          console.log(error);
+        })
+
+  if(message.status==='BLOCKED'){
+    return;
+  }
+
   var messageElement = document.createElement('li');
 
   if (message.type === 'JOIN') {
@@ -115,15 +129,6 @@ function onMessageReceived(payload) {
     messageElement.classList.add('event-message');
     message.content = message.sender + ' left!';
   } else {
-    fetch('/chatrooms/getUserStatus/' + selectedChat + '/' + user.username)
-        .then(response => response.json())
-        .then(data => {
-          user.status = data;
-        })
-        .catch(error => {
-          console.log('Error fetching chat rooms:', error);
-        })
-
     if (user.status === 'ACTIVE' && message.status !== 'BLOCKED') {
       messageElement.classList.add('chat-message');
 
@@ -137,52 +142,31 @@ function onMessageReceived(payload) {
       var usernameElement = document.createElement('span');
       var usernameText = document.createTextNode(message.sender);
       usernameElement.appendChild(usernameText);
-      // fetch('/chatrooms/messages/add/'+selectedChat,{
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify({
-      //     content: message.content,
-      //     type: 'CHAT'
-      //   })
-      // })
-      // .then(response => response.json())
-      // .then(data => {
-      //   console.log(data);
-      // })
-      // .catch(error => {
-      //   console.log('Error fetching chat rooms:', error);
-      // })
+      if (user.username === selectedChat) {
+        var blockUser = document.createElement('d');
+        var blockText = document.createTextNode('Block');
+        blockUser.appendChild(blockText);
+        messageElement.appendChild(blockUser);
 
-      // if (user.username === chatRooms[selectedChat].admin) {
-      //   var blockUser = document.createElement('d');
-      //   var blockText = document.createTextNode('Block');
-      //   blockUser.appendChild(blockText);
-      //   messageElement.appendChild(blockUser);
-
-      //   blockUser.addEventListener('click', (e) => {
-      //     if (user.status === 'ACTIVE') {
-      //       user.status = 'BLOCKED';
-      //       blockUser.textContent = 'Unblock';
-      //     } else {
-      //       user.status = 'ACTIVE';
-      //       blockUser.textContent = 'Block';
-      //     }
-
-      //     // Send a message to the server to update the user's status
-      //     stompClient.send(
-      //         '/app/chat.updateStatus/' + selectedChat, {}, JSON.stringify({
-      //           sender: user.username,
-      //           status: user.status,
-      //           type: 'STATUS_UPDATE'
-      //         }));
-      //   });
-      // }
+        blockUser.addEventListener('click', (e) => {
+          if (user.status === 'ACTIVE') {
+            user.status = 'BLOCKED';
+            blockUser.textContent = 'Unblock';
+          } else {
+            user.status = 'ACTIVE';
+            blockUser.textContent = 'Block';
+          }
+          stompClient.send(
+              '/app/chat.updateStatus/' + selectedChat, {}, JSON.stringify({
+                sender: message.sender,
+                status: message.status,
+                type: 'STATUS_UPDATE'
+              }));
+        });
+      }
       messageElement.appendChild(usernameElement);
     }
     else {
-      // Handle messages for blocked users
       messageElement.classList.add('blocked-message');
       message.content = 'This user is blocked.';
     }
@@ -197,7 +181,6 @@ function onMessageReceived(payload) {
   messageArea.appendChild(messageElement);
   messageArea.scrollTop = messageArea.scrollHeight;
 }
-4
 
 
 function getAvatarColor(messageSender) {
@@ -212,6 +195,11 @@ function getAvatarColor(messageSender) {
 
 usernameForm.addEventListener('submit', connect, true)
 messageForm.addEventListener('submit', sendMessage, true)
+chatMenu.addEventListener('click', function(e) {
+  e.preventDefault();
+  const room = e.target.getAttribute('data-room');
+  switchChatRoom(room);
+}, true);
 
 function showOldMessanges() {
   fetch('/chatrooms/messages/' + selectedChat)
@@ -260,19 +248,14 @@ function switchChatRoom(room) {
       '/app/chat.addUser/' + selectedChat, {},
       JSON.stringify({sender: user.username, type: 'JOIN'}))
 
-  clearMessages();  // Clear all messages
+  clearMessages();
   showOldMessanges();
 }
 
-// Add click event listener to dynamically created chat room links
-chatMenu.addEventListener('click', function(e) {
-  e.preventDefault();
-  const room = e.target.getAttribute('data-room');
-  switchChatRoom(room);
-}, true);
 
 function clearMessages() {
   while (messageArea.firstChild) {
     messageArea.removeChild(messageArea.firstChild);
   }
 }
+

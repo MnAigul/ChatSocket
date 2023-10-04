@@ -24,20 +24,7 @@ public class ChatController {
     @MessageMapping("/chat.sendMessage/{chatRoom}")
     @SendTo("/topic/{chatRoom}")
     public ChatMessage sendMessage(@Payload ChatMessage chatMessage, @DestinationVariable String chatRoom) {
-        String sender = chatMessage.getSender();
-        // if (!chatRooms.containsKey(chatRoom)) {
-        // ChatRoom room = new ChatRoom(new HashMap<String, User>(),username,new
-        // ArrayList<>());
-        // room.addUser(new User(username, "ACTIVE"));
-        // chatRooms.put(chatRoom, room);
-        // } else {
-        // chatRooms.get(chatRoom).addUser(new User(username, "ACTIVE"));
-        // }
         chatRooms.get(chatRoom).addMessage(chatMessage);
-        // if (chatRooms.get(chatRoom).getUsers().get(sender).getStatus().equalsIgnoreCase("BLOCKED")) {
-        //     return null;
-        // }
-
         return chatMessage;
     }
 
@@ -47,8 +34,6 @@ public class ChatController {
             @DestinationVariable String chatRoom) {
         String username = chatMessage.getSender();
         headerAccessor.getSessionAttributes().put("username", username);
-
-        // Create or retrieve the chat room
         if (!chatRooms.containsKey(chatRoom)) {
             ChatRoom room = new ChatRoom(new HashMap<String, User>(), username, new ArrayList<>());
             room.addUser(new User(username, "ACTIVE"));
@@ -57,12 +42,7 @@ public class ChatController {
             if(!chatRooms.get(chatRoom).getUsers().containsKey(username)) {
                  chatRooms.get(chatRoom).addUser(new User(username, "ACTIVE"));
             }
-           
         }
-
-        // ChatRoom room = chatRooms.computeIfAbsent(chatRoom, k -> new
-        // ChatRoom(username));
-        //
         return chatMessage;
     }
 
@@ -71,22 +51,11 @@ public class ChatController {
     @SendTo("/topic/{chatRoom}")
     public ChatMessage updateStatus(@Payload ChatMessage chatMessage, @DestinationVariable String chatRoom) {
         String sender = chatMessage.getSender();
-        // String newStatus = chatMessage.getStatus();
         if (chatRooms.get(chatRoom).getUsers().get(sender).getStatus().equalsIgnoreCase("BLOCKED")) {
             chatRooms.get(chatRoom).getUsers().get(sender).setStatus("ACTIVE");
-        } else if (chatRooms.get(chatRoom).getUsers().get(sender).getStatus().equalsIgnoreCase("ACTIVE")) {
+        } else{
             chatRooms.get(chatRoom).getUsers().get(sender).setStatus("BLOCKED");
         }
-        // Update the user's status in the chat room
-
-        // if (chatRooms.contains(chatRoom)) {
-        // ChatRoom room = chatRooms.get(chatRoom);
-        // ChatRoom room = chatRooms.;
-        // if (room.getUsers().containsKey(sender)) {
-        // room.getUsers().get(sender).setStatus(newStatus);
-        // }
-        // }
-
         return chatMessage;
     }
 
