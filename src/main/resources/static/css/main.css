@@ -31,6 +31,10 @@ body {
     display: none;
 }
 
+.hidden1 {
+    display: flex;
+}
+
 .form-control {
     width: 100%;
     min-height: 38px;
@@ -123,20 +127,34 @@ button.accent {
 
 
 #chat-page {
-    position: relative;
-    height: 100%;
-}
-
-.chat-container {
-    max-width: 700px;
-    margin-left: auto;
-    margin-right: auto;
     background-color: #fff;
-    box-shadow: 0 1px 11px rgba(0, 0, 0, 0.27);
-    margin-top: 30px;
+    width: 1140px;
+    margin: 30px auto auto;
     height: calc(100% - 60px);
     max-height: 600px;
-    position: relative;
+    box-shadow: 0 0px 25px rgba(0, 0, 0, 0.27);
+
+}
+.chat-container {
+    flex: 1;
+}
+#chat-page #sidebar {
+    width: 280px;
+    border-right: 1px solid #f7f7f7;
+
+}
+
+
+.sidebar-header{
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #f7f7f7;
+    font-weight: 400;
+}
+
+#chat-page #chatMenu li a {
+    text-decoration: none;
+    margin-left: 4px;
 }
 
 #chat-page ul {
