@@ -1,17 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Spring Boot Websocket chat</title>
     <link rel="stylesheet" href="/css/main.css">
 </head>
+
 <body>
-    <div id = "username-page">
+
+    <div id="username-page">
         <div class="username-page-container">
             <h1 class="title">Type your username to enter the Chatroom</h1>
             <form id="usernameForm" name="usernameForm">
                 <div class="form-group">
                     <input type="text" id="name" placeholder="Username" autocomplete="off" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <input type="text" id="chatRoomName" placeholder="chatRoomName" autocomplete="off"
+                        class="form-control" />
                 </div>
                 <div class="form-group">
                     <button type="submit" class="accent username-submit">Start Chatting</button>
@@ -21,6 +28,15 @@
     </div>
 
     <div id="chat-page" class="hidden">
+        <div  id="sidebar">
+            <div class="sidebar-header">
+                Список диалогов
+            </div>
+            <ul id="chatMenu">
+                <!-- <li><a href="#" data-room="general">General Chat</a></li> -->
+            </ul>
+
+        </div>
         <div class="chat-container">
             <div class="chat-header">
                 <h2>Spring WebSocket Chat Demo</h2>
@@ -34,7 +50,8 @@
             <form id="messageForm" name="messageForm">
                 <div class="form-group">
                     <div class="input-group clearfix">
-                        <input type="text" id="message" placeholder="Type a message..." autocomplete="off" class="form-control"/>
+                        <input type="text" id="message" placeholder="Type a message..." autocomplete="off"
+                            class="form-control" />
                         <button type="submit" class="primary">Send</button>
                     </div>
                 </div>
@@ -45,4 +62,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <script src="/js/main.js"></script>
 </body>
+
 </html>

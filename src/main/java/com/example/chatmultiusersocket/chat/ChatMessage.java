@@ -1,7 +1,6 @@
 package com.example.chatmultiusersocket.chat;
 
 import lombok.*;
-import org.springframework.web.util.pattern.PathPattern;
 
 @Getter
 @Setter
@@ -9,9 +8,8 @@ import org.springframework.web.util.pattern.PathPattern;
 @NoArgsConstructor
 @Builder
 public class ChatMessage {
-
     private String content;
     private String sender;
     private MessageType type;
-
+    private String status;
 }
